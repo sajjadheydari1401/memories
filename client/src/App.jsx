@@ -1,12 +1,17 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { useState, useEffect } from "react";
 import { Container, AppBar, Typography, Grow, Grid } from "@material-ui/core";
 import { useDispatch } from "react-redux";
+import firebase from "firebase/compat/app";
+import "firebase/compat/database";
 
-import Posts from "./components/Posts/Posts";
+import Posts from "./components/posts";
 import Form from "./components/Form/Form";
-import { getPosts } from "./actions/posts";
+import { getPosts } from "./redux/postSlice";
+import { firebaseConfig, postsCollection, getDocs } from "../firebase";
+import memories from "../public/memories.png";
+
 import useStyles from "./styles";
-import memories from "./images/memories.png";
 
 const App = () => {
   const [currentId, setCurrentId] = useState(0);
@@ -14,7 +19,30 @@ const App = () => {
   const classes = useStyles();
 
   useEffect(() => {
-    dispatch(getPosts());
+    firebase.initializeApp(firebaseConfig);
+
+    const fetchData = async () => {
+      try {
+        const docsSnap = await getDocs(postsCollection);
+
+        if (docsSnap.docs) {
+          await dispatch(getPosts());
+        } else {
+          // docSnap.data() will be undefined in this case
+          console.log("No such document!");
+        }
+
+        // const snapshot = await postsCollection.once("value");
+        // const postsData = await snapshot.val();
+        // Do something with the posts data
+        // console.log("postsData", postsData);
+        // await dispatch(getPosts());
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      }
+    };
+
+    fetchData();
   }, [currentId, dispatch]);
 
   return (
@@ -29,7 +57,7 @@ const App = () => {
         <Container>
           <Grid
             container
-            justify="space-between"
+            justifyContent="space-between"
             alignItems="stretch"
             spacing={3}
           >
