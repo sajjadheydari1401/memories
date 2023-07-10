@@ -27,22 +27,20 @@ export const createPost = createAsyncThunk("posts/create", async (post) => {
   }
 });
 
-export const updatePost = createAsyncThunk(
-  "posts/update",
-  async ({ id, post }) => {
-    try {
-      const response = await api.updatePost(id, post);
-      return response;
-    } catch (error) {
-      console.log(error.message);
-      throw error;
-    }
+export const updatePost = createAsyncThunk("posts/update", async (post) => {
+  try {
+    const response = await api.updatePost(post.id, post);
+    return response;
+  } catch (error) {
+    console.log(error.message);
+    throw error;
   }
-);
+});
 
 export const likePost = createAsyncThunk("posts/like", async (id) => {
   try {
     const response = await api.likePost(id);
+    console.log("response", response);
     return response;
   } catch (error) {
     console.log(error.message);
@@ -84,6 +82,10 @@ const postsSlice = createSlice({
         state.error = null;
         state.posts.push(action.payload);
       })
+      .addCase(updatePost.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
       .addCase(updatePost.fulfilled, (state, action) => {
         state.isLoading = false;
         state.error = null;
@@ -93,6 +95,10 @@ const postsSlice = createSlice({
         if (index !== -1) {
           state.posts[index] = action.payload;
         }
+      })
+      .addCase(updatePost.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
       })
       .addCase(likePost.fulfilled, (state, action) => {
         state.isLoading = false;

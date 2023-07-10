@@ -9,6 +9,7 @@ import {
   addDoc,
   getDocs,
   deleteDoc,
+  updateDoc,
   doc,
 } from "../../firebase";
 
@@ -55,33 +56,34 @@ export const createPost = async (newPost, file) => {
 };
 
 export const likePost = async (id) => {
-  try {
-    const postRef = postsCollection.doc(id);
-    const post = await postRef.get();
-    const likeCount = post.data().likeCount || 0;
-    await postRef.update({ likeCount: likeCount + 1 });
-    const updatedPost = {
-      id: post.id,
-      ...post.data(),
-      likeCount: likeCount + 1,
-    };
-    return updatedPost;
-  } catch (error) {
-    console.log(error.message);
-    throw error;
-  }
+  return await getDocs(postsCollection)
+    .then(async (posts) => {
+      let likedPost = posts.docs
+        .map((doc) => ({
+          ...doc.data(),
+          id: doc.id,
+        }))
+        .filter((post) => post.id === id);
+      const likeCount = likedPost[0].likeCount || 0;
+      const updatedLikeCount = likeCount + 1;
+      const updatedPost = {
+        ...likedPost[0],
+        likeCount: updatedLikeCount,
+      };
+
+      await updateDoc(doc(db, "posts", id), { likeCount: updatedLikeCount });
+      return updatedPost;
+    })
+    .catch((err) => {
+      console.log(err);
+      throw error;
+    });
 };
 
 export const updatePost = async (id, updatedPost) => {
   try {
-    const postRef = postsCollection.doc(id);
-    await postRef.update(updatedPost);
-    const post = await postRef.get();
-    const updatedData = {
-      id: post.id,
-      ...post.data(),
-    };
-    return updatedData;
+    await updateDoc(doc(db, "posts", id), updatedPost);
+    return updatedPost;
   } catch (error) {
     console.log(error.message);
     throw error;

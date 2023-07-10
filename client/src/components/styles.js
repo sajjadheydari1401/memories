@@ -11,4 +11,8 @@ export default makeStyles((theme) => ({
   actionDiv: {
     textAlign: "center",
   },
+  noPostBox: {
+    color: "white",
+    textAlign: "center",
+  },
 }));
